@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kotihinta Laskuri
 
-## Getting Started
+A real-estate analytics tool for Finnish addresses: search an address, see the
+area's real historic price trend, and get a transparent, formula-based
+valuation estimate.
 
-First, run the development server:
+## Data sources
+
+- **Historic prices (kerrostalo/rivitalo)**: [Statistics Finland (Tilastokeskus)](https://stat.fi/fi/tilasto/ashi)
+  ASHI open dataset — real, quarterly average €/m² sale prices by postal-code
+  area since 2009 (table `13mt`), with an annual municipality-level fallback
+  (table `13mx`) for areas with too few postcode-level transactions. Free,
+  open data (CC BY 4.0), no API key required.
+- **Historic prices (omakotitalo)**: [Maanmittauslaitos](https://www.maanmittauslaitos.fi/kiinteistotietojen-rajapintapalvelut/kiinteistokauppojen-tilastopalvelu-rest)
+  (National Land Survey of Finland) property-transaction statistics service,
+  built on the official land registry (Kauppahintarekisteri) — real median
+  sale prices by postal-code area since 2000, with the same municipality-level
+  fallback. Free, open, no API key or registration required.
+- **Geocoding**: [OpenStreetMap Nominatim](https://nominatim.org/) — resolves
+  a typed address to coordinates, postcode, and municipality.
+- **Map tiles**: [Esri's free light-gray canvas](https://server.arcgisonline.com/arcgis/rest/services/Canvas/World_Light_Gray_Base/MapServer)
+  (no API key required) via [Leaflet](https://leafletjs.com/) /
+  [react-leaflet](https://react-leaflet.js.org/), showing the searched
+  address on a map.
+
+Neither Oikotie nor Etuovi is used: neither publishes a public read API for
+listing or price data, and their sites are not scraped.
+
+## Why area-level, not exact-address, history
+
+Finland does not have a public per-address sale-price lookup for
+individuals — querying *individual* transaction records in the land registry
+(`kauppahintarekisteri`) requires a professional data-sharing agreement, and
+the one consumer-facing service that used to show individual sale prices
+(`asuntojen.hintatiedot.fi`) shut down its sales feed after its agreement
+ended. The *aggregate statistics* built on that same registry, however, are
+open — that's what powers the omakotitalo data here. So "history for this
+address" always means the real, official trend for its postal-code area (or
+municipality, when the postcode sample is too small), not a fabricated
+per-building series.
+
+## How the valuation works
+
+Kerrostalo/rivitalo (Tilastokeskus data is per m²):
+
+`estimate = (latest area €/m² × size in m²) × (1 + condition% + age%)`
+
+Omakotitalo (the land registry only reports a median *total* sale price per
+area — plot sizes vary too much to standardise a €/m² figure, so the entered
+size isn't used in the calculation):
+
+`estimate = latest area median sale price × (1 + condition% + age%)`
+
+- **Condition**: user-selected, ±0–15%.
+- **Age** (optional): derived from the building year, ±0–8%.
+- **Confidence band**: ±7 / ±10 / ±14% around the estimate, widened when the
+  area had few recorded transactions in the latest period.
+
+Every input to the estimate is shown in the UI — there is no hidden model.
+This is a statistical estimate, not a substitute for a professional
+valuation.
+
+## Running locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js (App Router) + TypeScript + Tailwind CSS v4 + Recharts, Geist font
+via `next/font/google`.
