@@ -60,7 +60,7 @@ export default function Home() {
 
       <div className="mb-10 text-center sm:mb-14">
         <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-          Kotihinta Laskuri
+          {dict.appName}
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-balance text-[17px] leading-relaxed text-muted">
           {dict.hero.subtitle}

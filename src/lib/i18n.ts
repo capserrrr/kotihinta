@@ -29,6 +29,7 @@ export type ErrorCode =
   | "network_error";
 
 interface Dictionary {
+  appName: string;
   hero: {
     subtitle: string;
   };
@@ -89,6 +90,7 @@ interface Dictionary {
 }
 
 const fi: Dictionary = {
+  appName: "Kotihinta Laskuri",
   hero: {
     subtitle:
       "Hae mikä tahansa suomalainen osoite ja näe alueen todellinen hintahistoria sekä läpinäkyvä arvio asunnon markkina-arvosta.",
@@ -201,6 +203,7 @@ const fi: Dictionary = {
 };
 
 const en: Dictionary = {
+  appName: "Home Price Calculator",
   hero: {
     subtitle:
       "Search any Finnish address to see the area's real price history and a transparent estimate of the property's market value.",
@@ -312,6 +315,7 @@ const en: Dictionary = {
 };
 
 const sv: Dictionary = {
+  appName: "Bostadsprisräknare",
   hero: {
     subtitle:
       "Sök vilken finsk adress som helst för att se områdets verkliga prishistorik och en transparent uppskattning av bostadens marknadsvärde.",

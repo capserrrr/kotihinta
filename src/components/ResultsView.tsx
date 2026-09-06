@@ -76,24 +76,24 @@ export default function ResultsView({ result }: { result: SearchResult }) {
   const areaLabel = dict.results.areaLabel(area.scope, address.postcode, address.city);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-      <div className="flex flex-col gap-6">
-        <div className="rounded-3xl border border-border bg-surface/60 p-6 sm:p-7">
-          <div className="text-[13px] font-medium uppercase tracking-wide text-muted">
-            {dict.results.searchedAddress}
-          </div>
-          <h2 className="mt-1 text-2xl font-semibold text-foreground">
-            {streetLine || address.label.split(",")[0]}
-          </h2>
-          <p className="mt-1 text-[15px] text-muted">{address.city}</p>
-          <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-surface-hover px-3 py-1 text-[13px] text-muted">
-            {dict.results.priceData}: {areaLabel}
-            {area.scope === "municipality" && (
-              <span className="text-muted/70">({dict.results.municipalityFallbackNote})</span>
-            )}
-          </div>
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
+      <div className="order-1 rounded-3xl border border-border bg-surface/60 p-6 sm:p-7 lg:order-none lg:col-start-1">
+        <div className="text-[13px] font-medium uppercase tracking-wide text-muted">
+          {dict.results.searchedAddress}
         </div>
+        <h2 className="mt-1 text-2xl font-semibold text-foreground">
+          {streetLine || address.label.split(",")[0]}
+        </h2>
+        <p className="mt-1 text-[15px] text-muted">{address.city}</p>
+        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-surface-hover px-3 py-1 text-[13px] text-muted">
+          {dict.results.priceData}: {areaLabel}
+          {area.scope === "municipality" && (
+            <span className="text-muted/70">({dict.results.municipalityFallbackNote})</span>
+          )}
+        </div>
+      </div>
 
+      <div className="order-3 flex flex-col gap-6 lg:order-none lg:col-start-1">
         <div className="rounded-3xl border border-border bg-surface/60 p-6 sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -188,84 +188,82 @@ export default function ResultsView({ result }: { result: SearchResult }) {
         )}
       </div>
 
-      <div className="flex flex-col gap-6">
-        {valuation ? (
-          <div className="rounded-3xl border border-border bg-surface/60 p-6 sm:p-7">
-            <div className="text-[13px] font-medium uppercase tracking-wide text-muted">
-              {dict.results.estimatedValue}
-            </div>
-            <div className="mt-1 text-4xl font-semibold tracking-tight text-foreground">
-              {formatEur(valuation.estimate)}
-            </div>
-            <div className="mt-1 text-[14px] text-muted">
-              {dict.results.rangeSeparator} {formatEur(valuation.low)} – {formatEur(valuation.high)}
-            </div>
+      {valuation ? (
+        <div className="order-2 rounded-3xl border border-border bg-surface/60 p-6 sm:p-7 lg:order-none lg:col-start-2 lg:row-span-2">
+          <div className="text-[13px] font-medium uppercase tracking-wide text-muted">
+            {dict.results.estimatedValue}
+          </div>
+          <div className="mt-1 text-4xl font-semibold tracking-tight text-foreground">
+            {formatEur(valuation.estimate)}
+          </div>
+          <div className="mt-1 text-[14px] text-muted">
+            {dict.results.rangeSeparator} {formatEur(valuation.low)} – {formatEur(valuation.high)}
+          </div>
 
-            <div className="mt-4 flex items-center gap-2 text-[13px] text-muted">
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${CONFIDENCE_DOT[valuation.confidence]}`}
-              />
-              {dict.results.confidenceLabels[valuation.confidence]}
-            </div>
-            <p className="mt-1 text-[13px] leading-relaxed text-muted">
-              {dict.results.confidenceReason(valuation.transactionCount, valuation.confidence)}
-            </p>
+          <div className="mt-4 flex items-center gap-2 text-[13px] text-muted">
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${CONFIDENCE_DOT[valuation.confidence]}`}
+            />
+            {dict.results.confidenceLabels[valuation.confidence]}
+          </div>
+          <p className="mt-1 text-[13px] leading-relaxed text-muted">
+            {dict.results.confidenceReason(valuation.transactionCount, valuation.confidence)}
+          </p>
 
-            <div className="mt-6 border-t border-border pt-5">
-              <div className="text-[13px] font-medium text-foreground">
-                {dict.results.valuationBasis}
-              </div>
-              <div className="mt-3 flex items-center justify-between text-[14px]">
-                <span className="text-muted">
-                  {valuation.mode === "per_m2"
-                    ? dict.results.areaPricePerM2(valuation.referencePeriod)
-                    : dict.results.areaMedianPrice(valuation.referencePeriod)}
-                </span>
+          <div className="mt-6 border-t border-border pt-5">
+            <div className="text-[13px] font-medium text-foreground">
+              {dict.results.valuationBasis}
+            </div>
+            <div className="mt-3 flex items-center justify-between text-[14px]">
+              <span className="text-muted">
+                {valuation.mode === "per_m2"
+                  ? dict.results.areaPricePerM2(valuation.referencePeriod)
+                  : dict.results.areaMedianPrice(valuation.referencePeriod)}
+              </span>
+              <span className="font-medium text-foreground">
+                {formatEur(valuation.referenceValue)}
+                {valuation.mode === "per_m2" ? "/m²" : ""}
+              </span>
+            </div>
+            {valuation.mode === "per_m2" && (
+              <div className="mt-2 flex items-center justify-between text-[14px]">
+                <span className="text-muted">{dict.results.baseCalculation}</span>
                 <span className="font-medium text-foreground">
-                  {formatEur(valuation.referenceValue)}
-                  {valuation.mode === "per_m2" ? "/m²" : ""}
+                  {formatEur(valuation.baseValue)}
                 </span>
               </div>
-              {valuation.mode === "per_m2" && (
-                <div className="mt-2 flex items-center justify-between text-[14px]">
-                  <span className="text-muted">{dict.results.baseCalculation}</span>
-                  <span className="font-medium text-foreground">
-                    {formatEur(valuation.baseValue)}
+            )}
+
+            <div className="mt-4 flex flex-col gap-2.5">
+              {valuation.adjustments.map((adj) => (
+                <div key={adj.code} className="flex items-center justify-between text-[14px]">
+                  <span className="text-muted">{dict.adjustments[adj.code]}</span>
+                  <span
+                    className={`font-medium ${
+                      adj.percent > 0
+                        ? "text-positive"
+                        : adj.percent < 0
+                          ? "text-negative"
+                          : "text-muted"
+                    }`}
+                  >
+                    {adj.percent > 0 ? "+" : ""}
+                    {adj.percent}%
                   </span>
                 </div>
-              )}
-
-              <div className="mt-4 flex flex-col gap-2.5">
-                {valuation.adjustments.map((adj) => (
-                  <div key={adj.code} className="flex items-center justify-between text-[14px]">
-                    <span className="text-muted">{dict.adjustments[adj.code]}</span>
-                    <span
-                      className={`font-medium ${
-                        adj.percent > 0
-                          ? "text-positive"
-                          : adj.percent < 0
-                            ? "text-negative"
-                            : "text-muted"
-                      }`}
-                    >
-                      {adj.percent > 0 ? "+" : ""}
-                      {adj.percent}%
-                    </span>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
+          </div>
 
-            <p className="mt-6 text-[12px] leading-relaxed text-muted/80">
-              {dict.results.disclaimer(metric.dataSourceLabel)}
-            </p>
-          </div>
-        ) : (
-          <div className="rounded-3xl border border-border bg-surface/60 p-6 text-[14px] text-muted">
-            {dict.results.noValuation}
-          </div>
-        )}
-      </div>
+          <p className="mt-6 text-[12px] leading-relaxed text-muted/80">
+            {dict.results.disclaimer(metric.dataSourceLabel)}
+          </p>
+        </div>
+      ) : (
+        <div className="order-2 rounded-3xl border border-border bg-surface/60 p-6 text-[14px] text-muted lg:order-none lg:col-start-2">
+          {dict.results.noValuation}
+        </div>
+      )}
     </div>
   );
 }
