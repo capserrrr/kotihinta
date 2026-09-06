@@ -84,7 +84,10 @@ export default function Home() {
         {!loading && result && <ResultsView result={result} />}
 
         {!loading && !result && !errorCode && hasSearched === false && (
-          <p className="mt-2 text-center text-[13px] text-muted/70">{dict.exampleHint}</p>
+          <>
+            <p className="mt-2 text-center text-[13px] text-muted/70">{dict.exampleHint}</p>
+            <p className="mt-1 text-center text-[12px] text-muted/50">Made by C.R.</p>
+          </>
         )}
       </div>
 
