@@ -85,6 +85,7 @@ interface Dictionary {
   errors: Record<ErrorCode, string>;
   footer: string;
   exampleHint: string;
+  backToBlog: string;
 }
 
 const fi: Dictionary = {
@@ -196,6 +197,7 @@ const fi: Dictionary = {
   footer:
     "Hintadata: Tilastokeskus & Maanmittauslaitos (avoin data) · Osoitehaku: OpenStreetMap Nominatim · Arviot ovat suuntaa-antavia eivätkä korvaa virallista kiinteistöarviota.",
   exampleHint: "Esimerkki: “Runeberginkatu 60, Helsinki” tai “Hämeenkatu 5, Tampere”",
+  backToBlog: "Casperin blogiin",
 };
 
 const en: Dictionary = {
@@ -306,6 +308,7 @@ const en: Dictionary = {
   footer:
     "Price data: Statistics Finland & National Land Survey of Finland (open data) · Address search: OpenStreetMap Nominatim · Estimates are indicative and do not replace an official property valuation.",
   exampleHint: "Example: “Runeberginkatu 60, Helsinki” or “Hämeenkatu 5, Tampere”",
+  backToBlog: "Casper's blog",
 };
 
 const sv: Dictionary = {
@@ -416,6 +419,7 @@ const sv: Dictionary = {
   footer:
     "Prisdata: Statistikcentralen & Lantmäteriverket (öppen data) · Adressökning: OpenStreetMap Nominatim · Uppskattningarna är riktgivande och ersätter inte ett officiellt värdeintyg.",
   exampleHint: "Exempel: “Runebergsgatan 60, Helsingfors” eller “Tavastgatan 5, Tammerfors”",
+  backToBlog: "Till Caspers blogg",
 };
 
 const dictionaries: Record<Lang, Dictionary> = { fi, en, sv };

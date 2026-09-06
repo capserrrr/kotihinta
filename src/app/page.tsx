@@ -46,7 +46,13 @@ export default function Home() {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-5 py-14 sm:py-20">
-      <div className="mb-6 flex justify-end">
+      <div className="mb-6 flex items-center justify-between">
+        <a
+          href="https://ronnlof.com"
+          className="text-[13px] text-muted transition hover:text-foreground"
+        >
+          &larr; {dict.backToBlog}
+        </a>
         <LanguageSwitcher />
       </div>
 
