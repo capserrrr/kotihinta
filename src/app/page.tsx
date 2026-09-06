@@ -5,6 +5,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import SearchForm from "@/components/SearchForm";
 import ResultsView from "@/components/ResultsView";
 import type { SearchRequestBody } from "@/app/api/search/route";
+import { BASE_PATH } from "@/lib/basePath";
 import { useDictionary } from "@/lib/LanguageContext";
 import type { ErrorCode } from "@/lib/i18n";
 import type { SearchErrorResponse, SearchResult } from "@/lib/types";
@@ -22,7 +23,7 @@ export default function Home() {
     setHasSearched(true);
 
     try {
-      const res = await fetch("/api/search", {
+      const res = await fetch(`${BASE_PATH}/api/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
