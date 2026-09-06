@@ -4,6 +4,7 @@ import { useState } from "react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import SearchForm from "@/components/SearchForm";
 import ResultsView from "@/components/ResultsView";
+import SocialLinks from "@/components/SocialLinks";
 import type { SearchRequestBody } from "@/app/api/search/route";
 import { BASE_PATH } from "@/lib/basePath";
 import { useDictionary } from "@/lib/LanguageContext";
@@ -87,7 +88,9 @@ export default function Home() {
         {!loading && !result && !errorCode && hasSearched === false && (
           <>
             <p className="mt-2 text-center text-[13px] text-muted/70">{dict.exampleHint}</p>
-            <p className="mt-1 text-center text-[12px] text-muted/50">Made by C.R.</p>
+            <p className="mt-1 text-center text-[12px] text-muted/50">
+              Made by C.R. <SocialLinks />
+            </p>
           </>
         )}
       </div>
