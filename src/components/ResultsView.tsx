@@ -225,6 +225,11 @@ export default function ResultsView({ result }: { result: SearchResult }) {
                 {valuation.mode === "per_m2" ? "/m²" : ""}
               </span>
             </div>
+            {valuation.mode === "median" && valuation.avgLotSizeM2 && (
+              <p className="mt-2 text-[12px] leading-relaxed text-muted/70">
+                {dict.results.lotSizeContext(valuation.avgLotSizeM2)}
+              </p>
+            )}
             {valuation.mode === "per_m2" && (
               <div className="mt-2 flex items-center justify-between text-[14px]">
                 <span className="text-muted">{dict.results.baseCalculation}</span>

@@ -29,6 +29,10 @@ export interface ValuationResult {
   high: number;
   confidence: "high" | "medium" | "low";
   transactionCount: number;
+  /** Detached houses only: the area's average registered plot size, and the
+   * user's own, when a lot-size adjustment was applied. */
+  avgLotSizeM2?: number;
+  userLotSizeM2?: number;
 }
 
 const CONDITION_CODE: Record<Condition, AdjustmentCode> = {
@@ -60,6 +64,22 @@ function buildAdjustments(condition: Condition, yearBuilt?: number): Adjustment[
   ];
   if (yearBuilt) adjustments.push(ageAdjustment(yearBuilt));
   return adjustments;
+}
+
+/** How the user's plot compares to the area's average — a modest, capped
+ * nudge (same spirit as the condition/age adjustments), not a linear scaling
+ * of price by land area, since land value doesn't scale that simply. */
+function lotSizeAdjustment(
+  userLotSizeM2: number,
+  avgLotSizeM2: number
+): { code: AdjustmentCode; percent: number } | null {
+  if (avgLotSizeM2 <= 0) return null;
+  const ratio = userLotSizeM2 / avgLotSizeM2;
+  if (ratio >= 1.5) return { code: "lot_much_larger", percent: 5 };
+  if (ratio >= 1.15) return { code: "lot_larger", percent: 2 };
+  if (ratio > 0.85) return { code: "lot_typical", percent: 0 };
+  if (ratio > 0.6) return { code: "lot_smaller", percent: -2 };
+  return { code: "lot_much_smaller", percent: -5 };
 }
 
 function confidenceFromCount(
@@ -149,16 +169,29 @@ export function computeValuation(
 
 /** Detached houses ("omakotitalo"): the land registry only reports a median
  * total sale price per area, not a €/m² figure, so the reference value IS
- * the base value — it isn't scaled by the user's entered size. */
+ * the base value — it isn't scaled by the user's entered size. Living/floor
+ * area isn't tracked anywhere in the open data, but registered plot size is,
+ * so when the user gives their plot size it becomes one more small, capped
+ * adjustment alongside condition and age — not a driver of the estimate. */
 export function computeHouseValuation(
   series: PricePoint[],
-  input: Pick<ValuationInput, "condition" | "yearBuilt">
+  input: Pick<ValuationInput, "condition" | "yearBuilt"> & {
+    lotSizeM2?: number;
+    avgLotSizeM2?: number | null;
+  }
 ): ValuationResult | null {
   const latest = latestUsablePoint(series);
   if (!latest || latest.pricePerM2 === null) return null;
 
   const referenceValue = latest.pricePerM2;
   const adjustments = buildAdjustments(input.condition, input.yearBuilt);
+
+  const hasLotComparison = !!(input.lotSizeM2 && input.avgLotSizeM2);
+  if (hasLotComparison) {
+    const lotAdj = lotSizeAdjustment(input.lotSizeM2!, input.avgLotSizeM2!);
+    if (lotAdj) adjustments.push(lotAdj);
+  }
+
   const totalPercent = adjustments.reduce((sum, a) => sum + a.percent, 0);
   const estimate = Math.round(referenceValue * (1 + totalPercent / 100));
   const count = latest.transactionCount ?? 0;
@@ -175,5 +208,7 @@ export function computeHouseValuation(
     high: Math.round(estimate * (1 + bandPercent / 100)),
     confidence,
     transactionCount: count,
+    avgLotSizeM2: input.avgLotSizeM2 ?? undefined,
+    userLotSizeM2: hasLotComparison ? input.lotSizeM2 : undefined,
   };
 }

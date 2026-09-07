@@ -11,6 +11,9 @@ const BASE = "https://khr.maanmittauslaitos.fi/tilastopalvelu/rest/1.1";
 // built detached-house properties in planned/zoned areas.
 const INDICATOR_MEDIAN_PRICE = 2313; // kauppahinta mediaani €
 const INDICATOR_COUNT = 2311; // lukumäärä kpl
+// Registered property (land) area — the land registry tracks parcels, not
+// building floor area, so this is plot size, not living space.
+const INDICATOR_AVG_LOT_SIZE = 2312; // pinta-ala keskiarvo m2
 
 const START_YEAR = 2000;
 
@@ -99,38 +102,71 @@ function hasEnoughData(series: PricePoint[]): boolean {
   return series.filter((p) => p.pricePerM2 !== null).length >= 3;
 }
 
+/** Average registered plot size for a region, for the given reference year —
+ * falling back to the nearest year with data if that exact year is missing. */
+async function avgLotSizeForRegion(
+  regionId: number,
+  referenceYear: number
+): Promise<number | null> {
+  const rows = await fetchIndicatorData(INDICATOR_AVG_LOT_SIZE);
+  const byYear = new Map<number, number>();
+  for (const row of rows) {
+    if (row.region === regionId && row.value !== null) byYear.set(row.year, row.value);
+  }
+  if (byYear.size === 0) return null;
+  if (byYear.has(referenceYear)) return byYear.get(referenceYear)!;
+
+  let closestYear: number | null = null;
+  let closestDiff = Infinity;
+  for (const year of byYear.keys()) {
+    const diff = Math.abs(year - referenceYear);
+    if (diff < closestDiff) {
+      closestDiff = diff;
+      closestYear = year;
+    }
+  }
+  return closestYear !== null ? (byYear.get(closestYear) ?? null) : null;
+}
+
 export interface DetachedHouseSeries {
   scope: "postcode" | "municipality";
   series: PricePoint[];
+  /** Average registered plot size in the area for the latest usable period,
+   * in m² — this is land area (what the land registry tracks), not building
+   * floor area, which isn't part of any open Finnish dataset. */
+  avgLotSizeM2: number | null;
 }
 
 /** Median sale-price history for detached ("omakotitalo") houses, by postal
  * code area, falling back to municipality when the postcode has too few
  * recorded transactions. Unlike the ASHI apartment data, the land registry
  * only reports a total sale-price median — not a price per square metre —
- * since plot sizes vary too much to standardise that figure. */
+ * since living/floor area isn't tracked here; only registered plot size is. */
 export async function fetchDetachedHouseSeries(
   postcode: string | null,
   cityName: string | null
 ): Promise<DetachedHouseSeries | null> {
+  const candidates: Array<{ scope: "postcode" | "municipality"; regionId: number }> = [];
+
   if (postcode) {
     const regionId = await findPostcodeRegionId(postcode);
-    if (regionId) {
-      const series = await seriesForRegion(regionId);
-      if (hasEnoughData(series)) {
-        return { scope: "postcode", series };
-      }
-    }
+    if (regionId) candidates.push({ scope: "postcode", regionId });
   }
-
   if (cityName) {
     const kuntaId = await findKuntaRegionId(cityName);
-    if (kuntaId) {
-      const series = await seriesForRegion(kuntaId);
-      if (hasEnoughData(series)) {
-        return { scope: "municipality", series };
-      }
-    }
+    if (kuntaId) candidates.push({ scope: "municipality", regionId: kuntaId });
+  }
+
+  for (const candidate of candidates) {
+    const series = await seriesForRegion(candidate.regionId);
+    if (!hasEnoughData(series)) continue;
+
+    const latestUsable = [...series].reverse().find((p) => p.pricePerM2 !== null);
+    const avgLotSizeM2 = latestUsable
+      ? await avgLotSizeForRegion(candidate.regionId, Number(latestUsable.period))
+      : null;
+
+    return { scope: candidate.scope, series, avgLotSizeM2 };
   }
 
   return null;

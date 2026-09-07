@@ -20,16 +20,28 @@ export default function SearchForm({ onSubmit, loading }: Props) {
   const [yearBuilt, setYearBuilt] = useState("");
   const [condition, setCondition] = useState<Condition>("hyva");
 
+  const isHouse = propertyType === "omakotitalo";
+
+  function handlePropertyTypeChange(next: PropertyType) {
+    // The size field means something different per type (living area vs.
+    // plot size) and isn't required for omakotitalo, so don't carry a
+    // misleading value across the switch.
+    if (next === "omakotitalo" && propertyType !== "omakotitalo") setSizeM2("");
+    else if (next !== "omakotitalo" && propertyType === "omakotitalo" && !sizeM2) setSizeM2("55");
+    setPropertyType(next);
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const size = parseFloat(sizeM2);
-    if (!address.trim() || !size || size <= 0) return;
+    if (!address.trim()) return;
+    const size = sizeM2 ? parseFloat(sizeM2) : undefined;
+    if (!isHouse && (!size || size <= 0)) return;
 
     onSubmit({
       address: address.trim(),
       propertyType,
       rooms,
-      sizeM2: size,
+      sizeM2: size && size > 0 ? size : undefined,
       yearBuilt: yearBuilt ? parseInt(yearBuilt, 10) : undefined,
       condition,
     });
@@ -67,7 +79,7 @@ export default function SearchForm({ onSubmit, loading }: Props) {
           <select
             id="propertyType"
             value={propertyType}
-            onChange={(e) => setPropertyType(e.target.value as PropertyType)}
+            onChange={(e) => handlePropertyTypeChange(e.target.value as PropertyType)}
             className={inputClass}
           >
             <option value="kerrostalo">{dict.form.propertyTypes.kerrostalo}</option>
@@ -96,21 +108,20 @@ export default function SearchForm({ onSubmit, loading }: Props) {
 
         <div>
           <label className={labelClass} htmlFor="sizeM2">
-            {dict.form.sizeLabel}
+            {isHouse ? dict.form.lotSizeLabel : dict.form.sizeLabel}{" "}
+            {isHouse && <span className="text-muted/60">{dict.form.lotSizeOptional}</span>}
           </label>
           <input
             id="sizeM2"
             type="number"
             min={1}
             step="0.5"
-            required
+            required={!isHouse}
+            placeholder={isHouse ? dict.form.lotSizePlaceholder : undefined}
             value={sizeM2}
             onChange={(e) => setSizeM2(e.target.value)}
             className={inputClass}
           />
-          {propertyType === "omakotitalo" && (
-            <p className="mt-1 text-[12px] text-muted/70">{dict.form.sizeNotUsedNote}</p>
-          )}
         </div>
 
         <div>

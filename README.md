@@ -46,13 +46,18 @@ Kerrostalo/rivitalo (Tilastokeskus data is per m²):
 `estimate = (latest area €/m² × size in m²) × (1 + condition% + age%)`
 
 Omakotitalo (the land registry only reports a median *total* sale price per
-area — plot sizes vary too much to standardise a €/m² figure, so the entered
-size isn't used in the calculation):
+area — and only tracks registered *plot* size, not building/living area,
+which isn't part of any open Finnish dataset, so the estimate can't be
+scaled by house size the way apartments are):
 
-`estimate = latest area median sale price × (1 + condition% + age%)`
+`estimate = latest area median sale price × (1 + condition% + age% + plot-size%)`
 
 - **Condition**: user-selected, ±0–15%.
 - **Age** (optional): derived from the building year, ±0–8%.
+- **Plot size** (omakotitalo, optional): compares the user's entered plot
+  size to the area's average registered plot size, ±0–5% — a small, capped
+  nudge in the same spirit as condition/age, not a claim that land value
+  scales linearly with area.
 - **Confidence band**: ±7 / ±10 / ±14% around the estimate, widened when the
   area had few recorded transactions in the latest period.
 

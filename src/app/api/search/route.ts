@@ -20,7 +20,10 @@ export interface SearchRequestBody {
   address: string;
   propertyType: PropertyType;
   rooms: Rooms;
-  sizeM2: number;
+  /** Living area for kerrostalo/rivitalo (required); plot size for
+   * omakotitalo (optional — only used for a small comparison adjustment,
+   * since living-area data doesn't exist in the open land registry). */
+  sizeM2?: number;
   yearBuilt?: number;
   condition: Condition;
 }
@@ -45,7 +48,7 @@ export async function POST(request: Request) {
   if (!body.address?.trim()) {
     return errorResponse("missing_address", 400);
   }
-  if (!body.sizeM2 || body.sizeM2 <= 0) {
+  if (body.propertyType !== "omakotitalo" && (!body.sizeM2 || body.sizeM2 <= 0)) {
     return errorResponse("missing_size", 400);
   }
 
@@ -71,6 +74,8 @@ export async function POST(request: Request) {
       const valuation = computeHouseValuation(house.series, {
         condition: body.condition,
         yearBuilt: body.yearBuilt,
+        lotSizeM2: body.sizeM2 && body.sizeM2 > 0 ? body.sizeM2 : undefined,
+        avgLotSizeM2: house.avgLotSizeM2,
       });
 
       return NextResponse.json({
@@ -107,7 +112,7 @@ export async function POST(request: Request) {
 
     const trends = computeTrends(series);
     const valuation = computeValuation(series, {
-      sizeM2: body.sizeM2,
+      sizeM2: body.sizeM2 as number,
       condition: body.condition,
       yearBuilt: body.yearBuilt,
     });

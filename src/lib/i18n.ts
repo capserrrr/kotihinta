@@ -14,7 +14,13 @@ export type ConditionCode =
   | "condition_tyydyttava"
   | "condition_valttava";
 export type AgeCode = "age_new" | "age_fairly_new" | "age_mid" | "age_older" | "age_old";
-export type AdjustmentCode = ConditionCode | AgeCode;
+export type LotSizeCode =
+  | "lot_much_larger"
+  | "lot_larger"
+  | "lot_typical"
+  | "lot_smaller"
+  | "lot_much_smaller";
+export type AdjustmentCode = ConditionCode | AgeCode | LotSizeCode;
 export type TrendCode = "1y" | "5y" | "since_start";
 export type MetricType = "per_m2" | "median";
 export type AreaScope = "postcode" | "municipality";
@@ -41,7 +47,9 @@ interface Dictionary {
     roomsLabel: string;
     rooms: { "1": string; "2": string; "3plus": string };
     sizeLabel: string;
-    sizeNotUsedNote: string;
+    lotSizeLabel: string;
+    lotSizeOptional: string;
+    lotSizePlaceholder: string;
     yearBuiltLabel: string;
     yearBuiltOptional: string;
     yearBuiltPlaceholder: string;
@@ -72,6 +80,7 @@ interface Dictionary {
     adjustmentDetail: (percent: number) => string;
     disclaimer: (source: string) => string;
     noValuation: string;
+    lotSizeContext: (avgLotSizeM2: number) => string;
     metric: Record<
       MetricType,
       { chartTitle: string; valueLabel: string; valueSuffix: string; dataSourceLabel: string }
@@ -103,8 +112,9 @@ const fi: Dictionary = {
     roomsLabel: "Huoneita",
     rooms: { "1": "Yksiö", "2": "Kaksio", "3plus": "Kolmio+" },
     sizeLabel: "Koko (m²)",
-    sizeNotUsedNote:
-      "Ei käytetä laskennassa — vain kirjattujen kokonaiskauppahintojen mediaani on saatavilla omakotitaloille.",
+    lotSizeLabel: "Tontin koko (m²)",
+    lotSizeOptional: "(valinnainen)",
+    lotSizePlaceholder: "esim. 1200",
     yearBuiltLabel: "Rakennusvuosi",
     yearBuiltOptional: "(valinnainen)",
     yearBuiltPlaceholder: "esim. 1998",
@@ -169,6 +179,8 @@ const fi: Dictionary = {
     },
     areaLabel: (scope, postcode, city) =>
       scope === "postcode" && postcode ? `Postinumeroalue ${postcode}` : (city ?? ""),
+    lotSizeContext: (avgLotSizeM2) =>
+      `Alueen keskimääräinen tontti on noin ${Math.round(avgLotSizeM2)} m² — omakotitaloille ei ole avointa dataa asuinpinta-alasta, joten arvio perustuu tonttikokoon.`,
   },
   adjustments: {
     condition_erinomainen: "Erinomainen kunto",
@@ -180,6 +192,11 @@ const fi: Dictionary = {
     age_mid: "Keski-ikäinen rakennuskanta",
     age_older: "Vanhempi rakennuskanta (40–70 vuotta)",
     age_old: "Vanha rakennuskanta (yli 70 vuotta), mahdollisia putki-/julkisivuremontteja",
+    lot_much_larger: "Tontti selvästi keskimääräistä suurempi",
+    lot_larger: "Tontti keskimääräistä suurempi",
+    lot_typical: "Tontin koko lähellä alueen keskiarvoa",
+    lot_smaller: "Tontti keskimääräistä pienempi",
+    lot_much_smaller: "Tontti selvästi keskimääräistä pienempi",
   },
   chart: {
     noData: "Ei kuvaajaan riittävästi dataa.",
@@ -216,8 +233,9 @@ const en: Dictionary = {
     roomsLabel: "Rooms",
     rooms: { "1": "Studio", "2": "2-room", "3plus": "3-room+" },
     sizeLabel: "Size (m²)",
-    sizeNotUsedNote:
-      "Not used in the calculation — only the median of recorded total sale prices is available for detached houses.",
+    lotSizeLabel: "Plot size (m²)",
+    lotSizeOptional: "(optional)",
+    lotSizePlaceholder: "e.g. 1200",
     yearBuiltLabel: "Year built",
     yearBuiltOptional: "(optional)",
     yearBuiltPlaceholder: "e.g. 1998",
@@ -282,6 +300,8 @@ const en: Dictionary = {
     },
     areaLabel: (scope, postcode, city) =>
       scope === "postcode" && postcode ? `Postal code area ${postcode}` : (city ?? ""),
+    lotSizeContext: (avgLotSizeM2) =>
+      `The area's average plot is about ${Math.round(avgLotSizeM2)} m² — there's no open data on living area for detached houses, so the estimate uses plot size instead.`,
   },
   adjustments: {
     condition_erinomainen: "Excellent condition",
@@ -293,6 +313,11 @@ const en: Dictionary = {
     age_mid: "Mid-age building stock",
     age_older: "Older building stock (40–70 years)",
     age_old: "Old building stock (over 70 years), possible pipe/façade renovations",
+    lot_much_larger: "Plot notably larger than average",
+    lot_larger: "Plot larger than average",
+    lot_typical: "Plot size close to the area average",
+    lot_smaller: "Plot smaller than average",
+    lot_much_smaller: "Plot notably smaller than average",
   },
   chart: {
     noData: "Not enough data for a chart.",
@@ -328,8 +353,9 @@ const sv: Dictionary = {
     roomsLabel: "Rum",
     rooms: { "1": "Etta", "2": "Tvåa", "3plus": "Trea+" },
     sizeLabel: "Storlek (m²)",
-    sizeNotUsedNote:
-      "Används inte i beräkningen — endast medianen av registrerade totala köpesummor finns tillgänglig för egnahemshus.",
+    lotSizeLabel: "Tomtstorlek (m²)",
+    lotSizeOptional: "(valfritt)",
+    lotSizePlaceholder: "t.ex. 1200",
     yearBuiltLabel: "Byggnadsår",
     yearBuiltOptional: "(valfritt)",
     yearBuiltPlaceholder: "t.ex. 1998",
@@ -394,6 +420,8 @@ const sv: Dictionary = {
     },
     areaLabel: (scope, postcode, city) =>
       scope === "postcode" && postcode ? `Postnummerområde ${postcode}` : (city ?? ""),
+    lotSizeContext: (avgLotSizeM2) =>
+      `Områdets genomsnittliga tomt är ungefär ${Math.round(avgLotSizeM2)} m² — det finns ingen öppen data om boarea för egnahemshus, så uppskattningen använder tomtstorlek istället.`,
   },
   adjustments: {
     condition_erinomainen: "Utmärkt skick",
@@ -405,6 +433,11 @@ const sv: Dictionary = {
     age_mid: "Medelålders byggnadsbestånd",
     age_older: "Äldre byggnadsbestånd (40–70 år)",
     age_old: "Gammalt byggnadsbestånd (över 70 år), möjliga rör-/fasadrenoveringar",
+    lot_much_larger: "Tomten betydligt större än genomsnittet",
+    lot_larger: "Tomten större än genomsnittet",
+    lot_typical: "Tomtstorlek nära områdets genomsnitt",
+    lot_smaller: "Tomten mindre än genomsnittet",
+    lot_much_smaller: "Tomten betydligt mindre än genomsnittet",
   },
   chart: {
     noData: "Inte tillräckligt med data för en graf.",
